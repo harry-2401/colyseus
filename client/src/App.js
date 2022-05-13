@@ -8,14 +8,41 @@ function App() {
   const [room, setRoom] = useState(null);
   const event = useRef("move");
   const ROOM = "battle";
+
   useEffect(() => {
     console.log(client.current);
   }, [client]);
 
   useEffect(() => {
-    room?.onMessage("receiver", (message) => {
-      console.log(client, message);
-    });
+    if (room) {
+      room.onMessage("receiver", (message) => {
+        console.log(client, message);
+      });
+
+      room.state.players.onAdd = (player, key) => {
+        console.log(player, "has been added at", key);
+        // add your player entity to the game world!
+        // If you want to track changes on a child object inside a map, this is a common pattern:
+        player.onChange = function (changes) {
+          changes.forEach((change) => {
+            console.log("field:", change.field);
+            console.log("value:", change.value);
+            console.log("previousValue:", change.previousValue);
+          });
+        };
+        // force "onChange" to be called immediatelly
+        player.triggerAll();
+      };
+
+      room.state.players.onRemove = (player, key) => {
+        console.log(player, "has been removed at", key);
+        // remove your player entity from the game world!
+      };
+
+      room.state.players.onChange = (player, key) => {
+        console.log(player, "have changes at", key);
+      };
+    }
   }, [room]);
 
   const handleJoinOrCreate = async () => {
